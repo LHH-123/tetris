@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>俄罗斯方块终极版</title>
+	<style type = "text/css">
+	*{padding:0; margin:0;}
+	body{background-image:url(images/back.jpg);}
+	#wrap{width:700px; height:600px; margin:0 auto; margin-top:40px;background-image:url(images/wrapBack.jpg);}
+	#chessBord{width:500px;height:500px;border-spacing:0px;border:1px solid #000;background:#071b55;margin-top:20px;margin-left:20px;float:left;}
+	td{width:10px;height:10px;border:1px solid #000; box-sizing:border-box;}
+	.block{background:pink;}
+	#level,#next,#chessBord,#score{background:#071b55;border:1px solid #4b92ea;border-radius:4px;}
+	#level,#next,#score{margin-left:14px;float:left;margin-top:60px;color:#fff;font-size:2em;font-family:"微软雅黑";}
+	#levelSelsct,#nextBlock,#score,#level,#next,#scoreRecored{width:140px;height:60px;background:#071b55;}
+
+	</style>
+</head>
+<body>
+	<div id="wrap">
+		<table id="chessBord"></table>
+
+		<button id="startAndEnd"></button>
+
+		<div id="score">
+			<div id="scoreRecored"></div>
+			<p>SCORE</p>
+		</div>
+
+		<div id="next">
+			<div id="nextBlock"></div>
+			<p>NEXT</p>
+		</div>
+
+		<div id="level">
+			<select name="choseLevel" id="levelSelsct">
+				<option value="1">低级</option>
+				<option value="2">中级</option>
+				<option value="4">高级</option>
+			</select>
+			<p>LEVEL</p>
+		</div>
+
+	</div>
+<script type = "text/javascript">
+function Map(width,height)
+{
+	this.width = width;
+	this.height = height;
+	this.mapArr = new Array();
+	this.markArr = new Array();
+	this.score = 0;
+	for (var i = 0; i < this.width; i++) 
+	{
+		this.mapArr[i] = new Array(2);
+		this.markArr[i] = new Array(2);
+	}
+}
+Map.prototype = 
+{
+	initMap:function(id)
+	{
+		var tBody = document.createElement('tbody');
+		var table = document.getElementById(id);
+		for (var i = 0; i < this.width; i++) 
+		{
+			var col = document.createElement('tr');
+			for (var j = 0; j < this.height; j++) 
+			{
+				var row = document.createElement('td');
+				this.mapArr[j][i] = col.appendChild(row);
+			};
+			tBody.appendChild(col);
+		};
+		table.appendChild(tBody);
+	},
+	
+	initMarkArr:function()
+	{
+		for (var i = 0; i < this.width; i++) 
+		{
+			for (var j = 0; j < this.height; j++)
+			{
+				this.markArr[j][i] = 0;
+			};
+			
+		};
+	},
+
+	drawBlock:function(block)
+	{
+		for (var i = 0; i < this.width; i++) 
+		{
+			for (var j = 0; j < this.height; j++) 
+			{
+				this.mapArr[j][i].style.backgroundColor = this.markArr[j][i] ? block.colors[this.markArr[j][i]] : "";					
+			};
+		};
+		for (var i = 0; i < block.blockArr.length; i++)
+		{
+			this.mapArr[block.blockArr[i][0]][block.blockArr[i][1]].style.backgroundColor = block.colors[block.type];
+		};
+	},
+
+	deleteLine:function()
+	{
+		for (var i = this.height-1; i > 0; i--)
+		{
+			var flag1 = true;
+			for (var j = 0; j < this.width; j++)
+			{
+				if(this.markArr[j][i] == 0)
+				{
+					flag1 = false;
+					break;
+				}
+			};
+		
+			if(flag1)
+			{
+				for (var l = i + 1; l > 1; l--) 
+				{
+					for (var k = 0; k < this.height; k++) 
+					{
+				     	this.markArr[k][l] = this.markArr[k][l-1];						
+					};					
+				};
+				i++;
+				this.score += 10;
+		    	document.getElementById('score').innerHTML = this.score;
+			}
+		};
+	}
+}
+
+function Block(x,y)
+{
+	this.blockArr = new Array();
+	for (var i = 0; i < 4; i++) 
+	{
+		this.blockArr[i] = new Array();
+	};
+	this.x = x;
+	this.y = y;
+	this.type;
+	this.colors = [" ","green","blue","pink","yellow","white","gray","red"];
+}
+
+Block.prototype =
+{
+	initBlock:function()
+	{
+		this.type = Math.floor(Math.random()*7+1);
+		switch(this.type)
+		{
+			// ■ ■
+			// ■ ■
+			case 1:
+			this.blockArr[0][0] = this.x; this.blockArr[0][1] = this.y;
+			this.blockArr[1][0] = this.x+1; this.blockArr[1][1] = this.y;
+			this.blockArr[2][0] = this.x; this.blockArr[2][1] = this.y+1;
+			this.blockArr[3][0] = this.x+1; this.blockArr[3][1] = this.y+1;
+			break;
+			// ■ ■
+			//   ■ ■			
+			case 2:
+			this.blockArr[0][0] = this.x; this.blockArr[0][1] = this.y;
+			this.blockArr[1][0] = this.x+1; this.blockArr[1][1] = this.y;
+			this.blockArr[2][0] = this.x+1; this.blockArr[2][1] = this.y+1;
+			this.blockArr[3][0] = this.x+2; this.blockArr[3][1] = this.y+1;
+			break;
+			//   ■ ■
+			// ■ ■
+			case 3:
+			this.blockArr[0][0] = this.x; this.blockArr[0][1] = this.y+1;
+			this.blockArr[1][0] = this.x+1; this.blockArr[1][1] = this.y+1;
+			this.blockArr[2][0] = this.x+1; this.blockArr[2][1] = this.y;
+			this.blockArr[3][0] = this.x+2; this.blockArr[3][1] = this.y;			
+			break;
+			// ■ ■ ■
+			//   ■
+			case 4:
+			this.blockArr[0][0] = this.x; this.blockArr[0][1] = this.y;
+			this.blockArr[1][0] = this.x+1; this.blockArr[1][1] = this.y;
+			this.blockArr[2][0] = this.x+2; this.blockArr[2][1] = this.y;
+			this.blockArr[3][0] = this.x+1; this.blockArr[3][1] = this.y+1;			
+			break;
+			// ■
+			// ■ 
+			// ■ ■
+			case 5:
+			this.blockArr[0][0] = this.x; this.blockArr[0][1] = this.y;
+			this.blockArr[1][0] = this.x; this.blockArr[1][1] = this.y+1;
+			this.blockArr[2][0] = this.x; this.blockArr[2][1] = this.y+2;
+			this.blockArr[3][0] = this.x+1; this.blockArr[3][1] = this.y+2;				
+			break;
+			//   ■
+			//   ■ 
+			// ■ ■
+			case 6:
+			this.blockArr[0][0] = this.x+1; this.blockArr[0][1] = this.y;
+			this.blockArr[1][0] = this.x+1; this.blockArr[1][1] = this.y+1;
+			this.blockArr[2][0] = this.x+1; this.blockArr[2][1] = this.y+2;
+			this.blockArr[3][0] = this.x; this.blockArr[3][1] = this.y+2;
+			break;
+			// ■ ■ ■ ■
+			case 7:
+			this.blockArr[0][0] = this.x; this.blockArr[0][1] = this.y;
+			this.blockArr[1][0] = this.x+1; this.blockArr[1][1] = this.y;
+			this.blockArr[2][0] = this.x+2; this.blockArr[2][1] = this.y;
+			this.blockArr[3][0] = this.x+3; this.blockArr[3][1] = this.y;			
+			break;
+		}
+	},
+
+	fallDown:function()
+	{
+		for (var i = 0; i < 4; i++) 
+		{
+			this.blockArr[i][1] += 1;				
+		}
+	},
+
+	move:function(keyCode,map)
+	{
+		var maxAndMix = new Array();
+		var compare = function(value1,value2)
+		{
+			return value1-value2;
+		};
+		for (var i = 0; i < 4; i++)
+		{
+			maxAndMix[i] = this.blockArr[i][0];
+		};
+		maxAndMix.sort(compare);
+
+		if(maxAndMix[maxAndMix.length-1] < map.width-1 && keyCode == 39)
+		{
+			for (var i = 0; i < 4; i++) 
+			{
+				this.blockArr[i][0] += 1;				
+			}
+		} else if(maxAndMix[0] > 0 && keyCode == 37)
+		{
+			for (var i = 0; i < 4; i++) 
+			{
+				this.blockArr[i][0] -= 1;				
+			}
+		} else if(keyCode == 40)
+		{
+			for (var i = 0; i < 4; i++) 
+			{
+				this.blockArr[i][1] += 1;				
+			}
+		} else if(keyCode == 38)
+		{
+			this.rotate(map);			
+		}
+	},
+
+	rotate:function(map)
+	{
+		var tempBlockArr = new Array();
+		for (var i = 0; i < 4; i++) 
+		{
+			tempBlockArr[i] = new Array();
+			tempBlockArr[i][0] = this.blockArr[i][0];
+			tempBlockArr[i][1] = this.blockArr[i][1];
+		}
+		var cx = Math.round((tempBlockArr[0][0]+tempBlockArr[1][0]+tempBlockArr[2][0]+tempBlockArr[3][0])/4);
+		var cy = Math.round((tempBlockArr[0][1]+tempBlockArr[1][1]+tempBlockArr[2][1]+tempBlockArr[3][1])/4);
+
+		if(this.judge(tempBlockArr,map))
+		{
+			for (var i = 0; i < 4; i++) 
+			{
+				tempBlockArr[i][0] = this.blockArr[i][1] - cy +cx;
+				tempBlockArr[i][1] = cx - this.blockArr[i][0] + cy;
+				this.blockArr[i][0] = tempBlockArr[i][0];
+				this.blockArr[i][1] = tempBlockArr[i][1];
+			}
+		}		
+	},
+
+	judge:function(obj,map)
+	{
+		var flag = true;
+		for (var i = 0; i < obj.length; i++) 
+		{
+			if(map.markArr[obj[i][0]][obj[i][1]] != 0)
+			{
+				flag = false;
+				return flag;
+			}
+		};
+		return flag;
+	}
+}
+
+function GameMgr()
+{
+	this.map = new Map(25,25);
+	this.block = new Block(10,0);
+	this.initGameMgr.apply(this,arguments);
+}
+
+GameMgr.prototype =
+{
+	initGameMgr:function()
+	{
+		var that = this;
+		this.map.initMap('chessBord');
+		this.map.initMarkArr();
+
+		this.block.initBlock();
+		this.map.drawBlock(this.block);
+
+		var timmer = setInterval(function()
+		{
+			that.block.fallDown();
+			that.collision();
+			that.map.deleteLine();
+			that.map.drawBlock(that.block);
+		}, 400);
+
+		this.addEvent(window, 'keydown', function(event)
+		{
+			var eventType = event ? event : window.event; 
+			var keyCode = eventType.keyCode || eventType.which;
+			that.block.move(keyCode,that.map);
+			that.collision();
+			that.map.deleteLine();
+			that.map.drawBlock(that.block);
+		});
+	},
+
+	collision:function()
+	{
+		for (var i = 0; i < 4; i++)
+		{
+			if( this.map.markArr[this.block.blockArr[i][0]][this.block.blockArr[i][1]+1] != 0 || 
+				this.block.blockArr[i][1] >= this.map.height - 1)
+			{
+				for (var j = 0; j < 4; j++) 
+				{
+				    this.map.markArr[this.block.blockArr[j][0]][this.block.blockArr[j][1]] = this.block.type;	
+				};
+				this.block.initBlock();
+				return;
+			}
+		}
+	},
+
+	addEvent:function(ele,type,handler)
+	{
+		return ele.addEventListener ? ele.addEventListener(type, handler, false) : 
+		       ele.attachEvent('on'+type, handler);
+	}
+};
+window.onload = function()
+{
+	new GameMgr;
+}	
+
+</script>	
+</body>
+</html>
