@@ -10,10 +10,12 @@
 	#chessBord{width:500px;height:500px;border-spacing:0px;border:1px solid #000;background:#071b55;margin-top:20px;margin-left:20px;float:left;}
 	td{width:10px;height:10px;border:1px solid #000; box-sizing:border-box;}
 	.block{background:pink;}
-	#level,#next,#chessBord,#score{background:#071b55;border:1px solid #4b92ea;border-radius:4px;}
+	#level,#next,#chessBord,#score, #btn-wrap{background:#071b55;border:1px solid #4b92ea;border-radius:4px;}
 	#level,#next,#score{margin-left:14px;float:left;margin-top:60px;color:#fff;font-size:2em;font-family:"微软雅黑";}
 	#levelSelsct,#nextBlock,#score,#level,#next,#scoreRecored{width:140px;height:60px;background:#071b55;}
-
+	#btn-wrap{width:140px;margin-left:14px;float:left;margin-top:60px;color:#fff;height:76px;text-align:center;font-size:0em;}
+	#btn-wrap button{width:40px;height:20px;}
+	#btn-wrap div{}
 	</style>
 </head>
 <body>
@@ -39,6 +41,20 @@
 				<option value="4">高级</option>
 			</select>
 			<p>LEVEL</p>
+		</div>
+
+		<div id="btn-wrap">
+			<div>
+				<button id="top-btn">^</button>
+			</div>
+			<div>
+				<button id="left-btn"><</button>
+				<button id="reStart-btn">reset</button>
+				<button id="right-btn">></button>
+			</div>
+			<div>
+				<button id="bottom-btn">∨</button>
+			</div>	
 		</div>
 
 	</div>
@@ -301,6 +317,7 @@ function GameMgr()
 {
 	this.map = new Map(25,25);
 	this.block = new Block(10,0);
+	this.timmer = null;
 	this.initGameMgr.apply(this,arguments);
 }
 
@@ -308,30 +325,52 @@ GameMgr.prototype =
 {
 	initGameMgr:function()
 	{
-		var that = this;
 		this.map.initMap('chessBord');
 		this.map.initMarkArr();
-
 		this.block.initBlock();
 		this.map.drawBlock(this.block);
-
-		var timmer = setInterval(function()
+		this.ctrl();
+		this.move();
+	},
+	move:function(){
+		clearInterval(this.timmer);
+		var that = this;
+		this.timmer = setInterval(function()
 		{
 			that.block.fallDown();
 			that.collision();
 			that.map.deleteLine();
 			that.map.drawBlock(that.block);
 		}, 400);
-
-		this.addEvent(window, 'keydown', function(event)
-		{
-			var eventType = event ? event : window.event; 
-			var keyCode = eventType.keyCode || eventType.which;
-			that.block.move(keyCode,that.map);
+	},
+	ctrl: function(){
+		var that = this;		
+		var handler = function(){
+			var event = Tools.EventUtill.getEvent(event);
+			var dir;
+			if(event.type === 'keydown'){
+				dir = event.keyCode || event.which;
+			} else if (event.type === 'click'){
+				var target = Tools.EventUtill.getTarget(event);
+				switch(target.id) {
+		    		case 'left-btn' : dir = 37;
+		    		break;
+		    		case 'top-btn' : dir = 38;
+		    		break;
+		    		case 'right-btn' : dir = 39;
+		    		break;
+		    		case 'bottom-btn' : dir = 40;
+		    		break;
+	    		}
+			}
+			that.block.move(dir,that.map);
 			that.collision();
 			that.map.deleteLine();
 			that.map.drawBlock(that.block);
-		});
+		}
+
+		Tools.EventUtill.addHandler(window,'keydown', handler);
+		Tools.EventUtill.addHandler(window,'click', handler)
 	},
 
 	collision:function()
@@ -350,13 +389,59 @@ GameMgr.prototype =
 			}
 		}
 	},
-
-	addEvent:function(ele,type,handler)
-	{
-		return ele.addEventListener ? ele.addEventListener(type, handler, false) : 
-		       ele.attachEvent('on'+type, handler);
-	}
 };
+Tools = {
+	EventUtill: {    
+	    addHandler: function(element,type,handler){  
+	        if(element.addEventListener){  
+	            element.addEventListener(type,handler,false);  
+	            }  
+	        else if(element.attachEvent){  
+	            element.attachEvent("on"+type,handler);  
+	            }  
+	        else{  
+	            element["on"+type]=handler;  
+	            }  
+	    },	      
+	    removeHandler:function(element,type,handler){  
+	        if(element.removeEventListener){  
+	            element.removeEventListener(type,handler,false);  
+	            }  
+	        else if(element.detachEvent){  
+	            element.detachEvent("on"+type,handler);  
+	            }  
+	        else{  
+	            element["on"+type]=null;  
+	            }         
+	    },
+	    getEvent:function(event){  
+        	return event ? event : window.event;  
+        },
+        getTarget:function(event){  
+        	return event.target || event.srcElement;  
+        },
+        preventDefault:function(event){  
+	        if(event.preventDefault){  
+	            event.preventDefault();  
+	        }  
+	        else{  
+	            event.returnValue = false;  
+	        }  
+        },
+        stopPropagation:function(event){  
+        	if(event.stopPropagation){  
+            	event.stopPropogation();//可以阻止冒泡和捕获  
+            }  
+        	else{  
+            	event.cancelBubble = true;  
+            }  
+        }   
+    },
+    getElement: function(id){
+    	if(!id) return;
+    	return document.getElementById(id);
+    } 
+}
 window.onload = function()
 {
 	new GameMgr;
