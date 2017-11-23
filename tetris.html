@@ -10,11 +10,11 @@
 	#chessBord{width:500px;height:500px;border-spacing:0px;border:1px solid #000;background:#071b55;margin-top:20px;margin-left:20px;float:left;}
 	td{width:10px;height:10px;border:1px solid #000; box-sizing:border-box;}
 	.block{background:pink;}
-	#level,#next,#chessBord,#score, #btn-wrap{background:#071b55;border:1px solid #4b92ea;border-radius:4px;}
+	#level,#next,#chessBord,#score{background:#071b55;border:1px solid #4b92ea;border-radius:4px;}
 	#level,#next,#score{margin-left:14px;float:left;margin-top:60px;color:#fff;font-size:2em;font-family:"微软雅黑";}
 	#levelSelsct,#nextBlock,#score,#level,#next,#scoreRecored{width:140px;height:60px;background:#071b55;}
 	#btn-wrap{width:140px;margin-left:14px;float:left;margin-top:60px;color:#fff;height:76px;text-align:center;font-size:0em;}
-	#btn-wrap button{width:40px;height:20px;}
+	#btn-wrap button{width:46px;height:24px;}
 	#btn-wrap div{}
 	</style>
 </head>
@@ -117,36 +117,6 @@ Map.prototype =
 			this.mapArr[block.blockArr[i][0]][block.blockArr[i][1]].style.backgroundColor = block.colors[block.type];
 		};
 	},
-
-	deleteLine:function()
-	{
-		for (var i = this.height-1; i > 0; i--)
-		{
-			var flag1 = true;
-			for (var j = 0; j < this.width; j++)
-			{
-				if(this.markArr[j][i] == 0)
-				{
-					flag1 = false;
-					break;
-				}
-			};
-		
-			if(flag1)
-			{
-				for (var l = i + 1; l > 1; l--) 
-				{
-					for (var k = 0; k < this.height; k++) 
-					{
-				     	this.markArr[k][l] = this.markArr[k][l-1];						
-					};					
-				};
-				i++;
-				this.score += 10;
-		    	document.getElementById('score').innerHTML = this.score;
-			}
-		};
-	}
 }
 
 function Block(x,y)
@@ -317,6 +287,7 @@ function GameMgr()
 {
 	this.map = new Map(25,25);
 	this.block = new Block(10,0);
+	this.score = 0;
 	this.timmer = null;
 	this.initGameMgr.apply(this,arguments);
 }
@@ -339,7 +310,7 @@ GameMgr.prototype =
 		{
 			that.block.fallDown();
 			that.collision();
-			that.map.deleteLine();
+			that.deleteLine();
 			that.map.drawBlock(that.block);
 		}, 400);
 	},
@@ -365,12 +336,51 @@ GameMgr.prototype =
 			}
 			that.block.move(dir,that.map);
 			that.collision();
-			that.map.deleteLine();
+			that.deleteLine();
 			that.map.drawBlock(that.block);
 		}
 
 		Tools.EventUtill.addHandler(window,'keydown', handler);
 		Tools.EventUtill.addHandler(window,'click', handler)
+	},
+	reStart: function()
+    {
+    	var that = this;
+    	this.addEvent(this.getElement('reStart-btn'), 'click', function(){
+			that.score = 0;
+    		that.init();
+			that.draw();
+			that.move();
+    	})
+    },
+    deleteLine:function()
+	{
+		for (var i = this.map.height-1; i > 0; i--)
+		{
+			var flag1 = true;
+			for (var j = 0; j < this.map.width; j++)
+			{
+				if(this.map.markArr[j][i] == 0)
+				{
+					flag1 = false;
+					break;
+				}
+			};
+		
+			if(flag1)
+			{
+				for (var l = i + 1; l > 1; l--) 
+				{
+					for (var k = 0; k < this.map.height; k++) 
+					{
+				     	this.map.markArr[k][l] = this.map.markArr[k][l-1];						
+					};					
+				};
+				i++;
+				this.score += 10;
+		    	Tools.getElement('scoreRecored').innerHTML = this.score;
+			}
+		};
 	},
 
 	collision:function()
@@ -388,6 +398,8 @@ GameMgr.prototype =
 				return;
 			}
 		}
+
+
 	},
 };
 Tools = {
